@@ -1007,5 +1007,11 @@
         "issues": "Issues",
         "merges": "Merge Requests",
         "projects": "Projects"
+    },
+    "wallabag": {
+      "unread": "Unread",
+      "archived": "Archived",
+      "starred": "Starred",
+      "tags": "Tags"
     }
 }
