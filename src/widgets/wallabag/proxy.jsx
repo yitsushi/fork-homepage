@@ -40,6 +40,8 @@ async function login(widget, service) {
     return { accessToken };
   } catch (e) {
     logger.error("Unable to login to Wallabag API: %s", e);
+
+    return { accessToken: false };
   }
 }
 
@@ -49,11 +51,10 @@ async function apiCall(widget, endpoint, service, terminateOnFailure = false) {
     "content-type": "application/json",
     Authorization: `Bearer ${cache.get(cacheKey)}`,
   };
-
-  const url = new URL(formatApiCall(widgets[widget.type].api, { endpoint, ...widget }));
   const method = "GET";
+  const url = new URL(formatApiCall(widgets[widget.type].api, { endpoint, ...widget }));
 
-  let [status, contentType, data, responseHeaders] = await httpProxy(url, {
+  const [status, contentType, data, responseHeaders] = await httpProxy(url, {
     method,
     headers,
   });
@@ -87,7 +88,7 @@ export default async function wallabagProxyHandler(req, res, mapping) {
     return res.status(400).json({ error: "Invalid proxy service type" });
   }
 
-  if (widget.type != "wallabag") {
+  if (widget.type !== "wallabag") {
     logger.debug("Invalid widget for service '%s' in group '%s'", service, group);
     return res.status(400).json({ error: "Invalid proxy service type" });
   }
@@ -96,11 +97,11 @@ export default async function wallabagProxyHandler(req, res, mapping) {
     await login(widget, service);
   }
 
-  const endpointParams = new URLSearchParams(JSON.parse(parameters ? parameters : "{}"));
+  const endpointParams = new URLSearchParams(JSON.parse(parameters || "{}"));
 
-  const { status, data } = await apiCall(widget, endpoint + "?" + endpointParams.toString(), service);
+  const { status, data } = await apiCall(widget, `${endpoint}?${endpointParams.toString()}`, service);
 
-  if (status != 200) {
+  if (status !== 200) {
     return res.status(status).json({ error: data.error_description });
   }
 

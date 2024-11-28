@@ -6,58 +6,42 @@ import useWidgetAPI from "utils/proxy/use-widget-api";
 
 const defaultValue = NaN;
 
-function getWidgetEntriesTotal(widget, field) {
-  let parameters = {};
-
-  switch (field) {
-    case "unread":
-      parameters.archive = 0;
-      break;
-    case "starred":
-      parameters.starred = 1;
-      break;
-    case "archived":
-      parameters.archive = 1;
-      break;
-  }
-
-  const { data, error } = useWidgetAPI(widget, "entries", parameters);
-
-  return {value: data?.total, error: error};
-}
-
 export default function Component({ service }) {
   const { t } = useTranslation();
   const { widget } = service;
 
-  let data = {
+  const data = {
     unread: defaultValue,
     archived: defaultValue,
     starred: defaultValue,
     tags: defaultValue,
   };
 
-  for (let field of ["unread", "archived", "starred"]) {
-    if (widget.fields && !widget.fields.includes(field)) {
-      continue
-    }
+  const { data: unreadData, error: unreadError } = useWidgetAPI(widget, "entries", {archive: 0});
+  const { data: archivedData, error: archivedError } = useWidgetAPI(widget, "entries", {archive: 1});
+  const { data: starredData, error: starredError } = useWidgetAPI(widget, "entries", {starred: 1});
+  const { data: tagsData, error: tagsError } = useWidgetAPI(widget, "tags");
 
-    const { value, error } = getWidgetEntriesTotal(widget, field);
-    if (error) {
-      return <Container service={service} error={error} />;
-    }
-
-    data[field] = value;
+  if (unreadError) {
+    return <Container service={service} error={unreadError} />;
   }
 
-  if (!widget.fields || widget.fields.includes("tags")) {
-    const { data: tagsData, error: tagsError } = useWidgetAPI(widget, "tags");
-    if (tagsError) {
-      return <Container service={service} error={tagsError} />;
-    }
-
-    data['tags'] = tagsData?.total;
+  if (archivedError) {
+    return <Container service={service} error={archivedError} />;
   }
+
+  if (starredError) {
+    return <Container service={service} error={starredError} />;
+  }
+
+  if (tagsError) {
+    return <Container service={service} error={tagsError} />;
+  }
+
+  data.unread = unreadData?.total;
+  data.archived = archivedData?.total;
+  data.starred = starredData?.total;
+  data.tags = tagsData?.total;
 
   return (
     <Container service={service}>
