@@ -1,5 +1,6 @@
-import { asJson } from "utils/proxy/api-helpers";
 import wallabagProxyHandler from "./proxy";
+
+import { asJson } from "utils/proxy/api-helpers";
 
 const widget = {
   api: "{url}/{endpoint}",
@@ -8,15 +9,15 @@ const widget = {
   mappings: {
     entries: {
       endpoint: "api/entries",
-      map: (data) => {
-        return { total: asJson(data).total };
-      },
+      map: (data) => ({
+        total: asJson(data).total,
+      }),
     },
     tags: {
       endpoint: "api/tags",
-      map: (data) => {
-        return { total: data.length };
-      },
+      map: (data) => ({
+        total: data.length,
+      }),
     },
   },
 };
